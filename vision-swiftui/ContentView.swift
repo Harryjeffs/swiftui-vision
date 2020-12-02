@@ -6,18 +6,24 @@
 //
 
 import SwiftUI
+import Vision
 
 struct ContentView: View {
     
     @ObservedObject var classifier = ClassificationController()
-    @State private var showCameraPopup = false
-    @State var showCameraPickerView = false
+    @State private var showActionSheet = false
+    @State private var showCameraPickerView = false
+    @State private var actionSheetOption: OptionsMenu = .cameraOptions  {
+        didSet {
+            showActionSheet = true
+        }
+    }
     @State var cameraPickerType: UIImagePickerController.SourceType = .camera {
         didSet {
             showCameraPickerView = true
         }
     }
-    private var modelText = ["Maya model", "Google Model"]
+    private var modelText = ["Maya", "Google"]
     
     var body: some View {
         NavigationView {
@@ -32,13 +38,23 @@ struct ContentView: View {
                          ,alignment: .bottomLeading)
                 .toolbar {
                     ToolbarItem(placement: .bottomBar) {
-                        Button(action: {
-                            self.showCameraPopup = true
-                        }) {
-                            Image(systemName: "camera.fill")
-                                .renderingMode(.original)
-                        }
+                        
+                            Button(action: {
+                                actionSheetOption = .cameraOptions
+                            }) {
+                                Image(systemName: "camera.fill")
+                            }
                     }
+                    ToolbarItem(placement: .bottomBar, content: {
+                        Button(action: {
+                            actionSheetOption = .scaleOptions
+                        }) {
+                            HStack {
+                                Image(systemName: "perspective")
+                                Text(classifier.selectedScaleOption.description)
+                            }
+                        }
+                    })
                     ToolbarItem(placement: .bottomBar, content: {
                         Spacer()
                     })
@@ -53,20 +69,39 @@ struct ContentView: View {
                     ImagePickerView(sourceType: cameraPickerType) { image in
                         classifier.selectedImage = image
                     }
-                }.actionSheet(isPresented: $showCameraPopup) {
-                    ActionSheet(title: Text("Action type"), message: nil, buttons: [
-                        .default(Text("Take Photo"), action: {
-                            cameraPickerType = .camera
-                        }),
-                        .default(Text("Camera Roll"), action: {
-                            cameraPickerType = .photoLibrary
-                        }),
-                        .cancel()
-                    ])
                 }
+                .actionSheet(isPresented: $showActionSheet, content: {
+                    if actionSheetOption == .cameraOptions {
+                        return showCameraPopupActionSheet()
+                    }
+                    return showScalingOptionActionSheet()
+                })
                 .navigationBarTitle("")
                 .navigationBarHidden(true)
         }
+    }
+    func showScalingOptionActionSheet() -> ActionSheet {
+        let options = ["Centre Crop", "Scale Fit", "Scale Fill"]
+        let buttons = options.enumerated().map { i, option in
+            Alert.Button.default(Text(option), action: {
+                classifier.selectedScaleOption = VNImageCropAndScaleOption(rawValue: UInt(i)) ?? .centerCrop
+            } )
+        }
+        return ActionSheet(title: Text("Scale Option"),
+                           buttons: buttons + [Alert.Button.cancel()])
+    }
+    
+    private func showCameraPopupActionSheet() -> ActionSheet {
+        let captureButton = ActionSheet.Button.default(Text("Take Photo")) {
+            cameraPickerType = .camera
+        }
+        let existingButton = ActionSheet.Button.default(Text("Camera Roll")) {
+            cameraPickerType = .photoLibrary
+        }
+        let actionSheet = ActionSheet(title: Text("Action Sheet"),
+                                      message: nil,
+                                      buttons: [captureButton, existingButton, .cancel()])
+        return actionSheet
     }
 }
 struct ContentView_Previews: PreviewProvider {
@@ -76,3 +111,4 @@ struct ContentView_Previews: PreviewProvider {
         }
     }
 }
+

@@ -22,6 +22,7 @@ class ClassificationController: ObservableObject {
     }
     @Published var selectedModelType = 0
     @Published var defaultPickerText = "Select an image"
+    @Published var selectedScaleOption: VNImageCropAndScaleOption = .centerCrop
     
     // MARK: - Image Classification
     lazy final var modelConfiguation = MLModelConfiguration()
@@ -45,8 +46,7 @@ class ClassificationController: ObservableObject {
             let request = VNCoreMLRequest(model: model, completionHandler: { [weak self] request, error in
                 self?.processClassifications(for: request, error: error)
             })
-            
-            request.imageCropAndScaleOption = .centerCrop
+            request.imageCropAndScaleOption = selectedScaleOption
             return request
         } catch {
             fatalError("Failed to load Vision ML model: \(error)")
