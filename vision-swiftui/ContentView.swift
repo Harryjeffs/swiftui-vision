@@ -38,23 +38,24 @@ struct ContentView: View {
                          ,alignment: .bottomLeading)
                 .toolbar {
                     ToolbarItem(placement: .bottomBar) {
-                        
+                        HStack {
                             Button(action: {
                                 actionSheetOption = .cameraOptions
                             }) {
                                 Image(systemName: "camera.fill")
                             }
-                    }
-                    ToolbarItem(placement: .bottomBar, content: {
-                        Button(action: {
-                            actionSheetOption = .scaleOptions
-                        }) {
-                            HStack {
-                                Image(systemName: "perspective")
-                                Text(classifier.selectedScaleOption.description)
+                            Button(action: {
+                                actionSheetOption = .scaleOptions
+                            }) {
+                                HStack {
+                                    Image(systemName: "perspective")
+                                    Text(classifier.selectedScaleOption.description)
+                                }
                             }
                         }
-                    })
+                            
+                    }
+                    
                     ToolbarItem(placement: .bottomBar, content: {
                         Spacer()
                     })
